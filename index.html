@@ -38,7 +38,6 @@
     position: relative;
   }
 
-  /* HEADER */
   header {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
@@ -59,7 +58,6 @@
     margin-top: 2px;
   }
 
-  /* TABS */
   .tabs {
     display: flex;
     background: var(--surface);
@@ -85,11 +83,9 @@
     border-bottom-color: var(--accent);
   }
 
-  /* PANELS */
   .panel { display: none; padding: 16px; }
   .panel.active { display: block; }
 
-  /* SEARCH BAR */
   .search-bar {
     display: flex;
     gap: 8px;
@@ -109,7 +105,6 @@
   .search-bar input:focus { border-color: var(--accent); }
   .search-bar input::placeholder { color: var(--text2); }
 
-  /* CARDS */
   .cards { display: flex; flex-direction: column; gap: 10px; }
 
   .card {
@@ -166,6 +161,7 @@
     padding: 0 14px 12px;
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
   }
   .btn {
     border: none;
@@ -183,6 +179,8 @@
   .btn-primary:hover { background: var(--accent2); }
   .btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
   .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-edit { background: var(--surface2); color: var(--accent); border: 1px solid var(--accent); }
+  .btn-edit:hover { background: var(--accent); color: #0f0f07; }
   .btn-danger { background: transparent; color: var(--red); border: 1px solid #5a1a14; }
   .btn-danger:hover { background: #5a1a14; }
   .btn-full { width: 100%; text-align: center; padding: 12px; font-size: 14px; border-radius: var(--radius); }
@@ -197,7 +195,6 @@
     margin-top: -2px;
   }
 
-  /* IMPORT PANEL */
   .import-zone {
     background: var(--surface);
     border: 2px dashed var(--border);
@@ -245,7 +242,6 @@
   }
   .check-icon { font-size: 16px; cursor: pointer; }
 
-  /* ADD FORM */
   .form-group { margin-bottom: 14px; }
   .form-group label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
   .form-group input, .form-group textarea, .form-group select {
@@ -263,7 +259,6 @@
   .form-group textarea { resize: vertical; min-height: 80px; }
   .form-group select option { background: var(--surface2); }
 
-  /* EMPTY */
   .empty {
     text-align: center;
     padding: 50px 20px;
@@ -273,7 +268,6 @@
   .empty h3 { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--text2); margin-bottom: 6px; }
   .empty p { font-size: 13px; line-height: 1.5; }
 
-  /* CATEGORIES FILTER */
   .cat-filter {
     display: flex;
     gap: 6px;
@@ -297,7 +291,6 @@
   }
   .cat-btn.active { background: var(--accent); color: #0f0f07; border-color: var(--accent); font-weight: 500; }
 
-  /* TOAST */
   .toast {
     position: fixed;
     bottom: 24px;
@@ -315,7 +308,6 @@
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
-  /* COUNTER */
   .counter {
     display: inline-flex;
     align-items: center;
@@ -351,7 +343,6 @@
   .card-notes { display: none; }
   .card-notes.visible { display: block; }
 
-  /* TOOLBAR BACKUP */
   .toolbar {
     display: flex;
     gap: 8px;
@@ -360,6 +351,42 @@
     border-top: 1px solid var(--border);
   }
   .toolbar .btn { flex: 1; text-align: center; }
+
+  /* MODAL EDITAR */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    width: 100%;
+    max-width: 460px;
+    margin-top: 30px;
+    animation: fadeIn 0.3s ease;
+  }
+  .modal h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--accent2);
+    margin-bottom: 16px;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .modal-actions .btn { flex: 1; padding: 12px; text-align: center; }
 </style>
 </head>
 <body>
@@ -434,6 +461,44 @@
   <button class="btn btn-primary btn-full" onclick="afegirRecepta()">Desar recepta</button>
 </div>
 
+<!-- MODAL EDITAR -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h2>✏️ Editar recepta</h2>
+    <input type="hidden" id="editIdx">
+    <div class="form-group">
+      <label>Títol *</label>
+      <input type="text" id="editTitle" placeholder="Nom de la recepta">
+    </div>
+    <div class="form-group">
+      <label>URL</label>
+      <input type="url" id="editUrl" placeholder="https://...">
+    </div>
+    <div class="form-group">
+      <label>Categoria</label>
+      <select id="editCat">
+        <option value="General">General</option>
+        <option value="Postres">Postres</option>
+        <option value="Carns">Carns</option>
+        <option value="Peixos">Peixos</option>
+        <option value="Verdures">Verdures</option>
+        <option value="Pasta i arròs">Pasta i arròs</option>
+        <option value="Aperitius">Aperitius</option>
+        <option value="Thermomix">Thermomix</option>
+        <option value="Tapes">Tapes</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Notes / Ingredients</label>
+      <textarea id="editNotes" placeholder="Ingredients, consells, variacions..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="tancarModal()">Cancel·lar</button>
+      <button class="btn btn-primary" onclick="guardarEdicio()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -458,14 +523,14 @@ function updateCounter() {
 
 // ─── CLASSIFICACIÓ AUTOMÀTICA ────────────────────────────────────────────────
 function detectarCategoria(text) {
-  const t = (text || '').toLowerCase();
+  var t = (text || '').toLowerCase();
   if (/thermomix/i.test(t)) return 'Thermomix';
-  if (/postre|mousse|natilla|xocolata|chocolate|trufa|espuma|pastís|pastis|cake|torta|flan|gelat|galeta|brownie|tiramisu|crema catalana|bunyol|coca|magdalena|muffin/i.test(t)) return 'Postres';
-  if (/pollastre|pollo|carn|carne|llom|bistec|pechuga|costella|hamburguesa|estofat|guisat|vedella|xai|porc|conill|pernil/i.test(t)) return 'Carns';
-  if (/peix|pesca|atun|atún|boquer|anxova|salmó|salmon|bacallà|bacalao|gamb|llagost|musclo|calamar|pop|tonyina|lluç/i.test(t)) return 'Peixos';
-  if (/amanida|ensalada|verdur|bròquil|espinac|carbass|alberg|tomàquet|ceba|pastanaga|mongeta verda|xampiny|bolet/i.test(t)) return 'Verdures';
-  if (/sándwich|sandwich|sandvitx|empanadilla|focaccia|foccacia|tapa|aperitiu|croqueta|pintxo|pincho|canap|bruschet/i.test(t)) return 'Tapes';
-  if (/pasta|arròs|arros|espagueti|macarr|risotto|lasanya|canelo|fideu|paella|noodle|ravioli|tallarí/i.test(t)) return 'Pasta i arròs';
+  if (/postre|mousse|natilla|xocolata|chocolate|trufa|espuma|pastís|pastis|cake|torta|flan|gelat|galeta|brownie|tiramisu|crema catalana|bunyol|coca|magdalena|muffin|tarta|bizcocho|cheesecake|cookie/i.test(t)) return 'Postres';
+  if (/pollastre|pollo|carn|carne|llom|bistec|pechuga|costella|hamburguesa|estofat|guisat|vedella|xai|porc|conill|pernil|filet|entrecot|albondig/i.test(t)) return 'Carns';
+  if (/peix|pesca|atun|atún|boquer|anxova|salmó|salmon|bacallà|bacalao|gamb|llagost|musclo|calamar|pop|tonyina|lluç|sardina|truita de riu/i.test(t)) return 'Peixos';
+  if (/amanida|ensalada|verdur|bròquil|espinac|carbass|alberg|tomàquet|ceba|pastanaga|mongeta verda|xampiny|bolet|escalivada/i.test(t)) return 'Verdures';
+  if (/sándwich|sandwich|sandvitx|empanadilla|focaccia|foccacia|tapa|aperitiu|croqueta|pintxo|pincho|canap|bruschet|hummus/i.test(t)) return 'Tapes';
+  if (/pasta|arròs|arros|espagueti|macarr|risotto|lasanya|canelo|fideu|paella|noodle|ravioli|tallarí|carbonara|bolonyesa/i.test(t)) return 'Pasta i arròs';
   return 'General';
 }
 
@@ -488,20 +553,22 @@ function showTabById(id) {
 
 // ─── RENDER RECEPTES ─────────────────────────────────────────────────────────
 function renderReceptes() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  let filtrades = receptes.filter(function(r) {
-    const matchQ = !q || r.title.toLowerCase().includes(q) || (r.notes || '').toLowerCase().includes(q);
-    const matchCat = catActiva === 'Totes' || r.cat === catActiva;
+  var q = document.getElementById('searchInput').value.toLowerCase();
+  var filtrades = receptes.filter(function(r) {
+    var matchQ = !q || r.title.toLowerCase().includes(q) || (r.notes || '').toLowerCase().includes(q) || (r.url || '').toLowerCase().includes(q);
+    var matchCat = catActiva === 'Totes' || r.cat === catActiva;
     return matchQ && matchCat;
   });
 
-  const cats = ['Totes', ...new Set(receptes.map(function(r) { return r.cat; }))];
-  const cf = document.getElementById('catFilter');
+  var cats = ['Totes'];
+  var seen = {};
+  receptes.forEach(function(r) { if (!seen[r.cat]) { seen[r.cat] = true; cats.push(r.cat); } });
+  var cf = document.getElementById('catFilter');
   cf.innerHTML = cats.map(function(c) {
     return '<button class="cat-btn ' + (c === catActiva ? 'active' : '') + '" onclick="setCat(\'' + c + '\')">' + c + '</button>';
   }).join('');
 
-  const lista = document.getElementById('listaReceptes');
+  var lista = document.getElementById('listaReceptes');
   if (filtrades.length === 0) {
     lista.innerHTML = '<div class="empty"><div class="icon">🥄</div><h3>' +
       (receptes.length === 0 ? 'Sense receptes' : 'Cap resultat') + '</h3><p>' +
@@ -511,14 +578,15 @@ function renderReceptes() {
   }
 
   lista.innerHTML = filtrades.map(function(r) {
-    const idx = receptes.indexOf(r);
-    const emoji = EMOJIS[r.cat] || '🍽';
-    const hasNotes = r.notes && r.notes.trim();
-    let html = '<div class="card">';
+    var idx = receptes.indexOf(r);
+    var emoji = EMOJIS[r.cat] || '🍽';
+    var hasNotes = r.notes && r.notes.trim();
+    var html = '<div class="card">';
     html += '<div class="card-header"><div class="card-icon">' + emoji + '</div>';
     html += '<div class="card-info"><div class="card-title">' + escHtml(r.title) + '</div>';
     html += '<div class="card-meta"><span class="tag">' + r.cat + '</span>';
     if (r.date) html += '<span>' + r.date + '</span>';
+    if (r.url) html += '<span style="color:var(--accent);font-size:10px">🔗 ' + escHtml(r.url.replace(/https?:\/\/(www\.)?/, '').split('/')[0]) + '</span>';
     html += '</div></div></div>';
     if (hasNotes) {
       html += '<div class="card-notes-toggle" onclick="toggleNotes(this)">▸ Veure notes</div>';
@@ -526,7 +594,7 @@ function renderReceptes() {
     }
     html += '<div class="card-actions">';
     if (r.url) html += '<a href="' + r.url + '" target="_blank" class="btn btn-primary">🔗 Obrir</a>';
-    html += '<button class="btn btn-ghost" onclick="editarCat(' + idx + ')">🏷 Cat.</button>';
+    html += '<button class="btn btn-edit" onclick="obrirEdicio(' + idx + ')">✏️ Editar</button>';
     html += '<button class="btn btn-danger" onclick="eliminar(' + idx + ')">🗑</button>';
     html += '</div></div>';
     return html;
@@ -538,7 +606,7 @@ function escHtml(t) {
 }
 
 function toggleNotes(el) {
-  const notes = el.nextElementSibling;
+  var notes = el.nextElementSibling;
   notes.classList.toggle('visible');
   el.textContent = notes.classList.contains('visible') ? '▾ Amagar notes' : '▸ Veure notes';
 }
@@ -557,28 +625,52 @@ function eliminar(idx) {
   }
 }
 
-function editarCat(idx) {
-  const cats = Object.keys(EMOJIS);
-  const actual = receptes[idx].cat;
-  const nova = prompt('Categoria:\n' + cats.join(', '), actual);
-  if (nova && cats.includes(nova)) {
-    receptes[idx].cat = nova;
-    save();
-    renderReceptes();
-    toast('Categoria actualitzada');
-  }
+// ─── EDITAR RECEPTA (MODAL) ─────────────────────────────────────────────────
+function obrirEdicio(idx) {
+  var r = receptes[idx];
+  document.getElementById('editIdx').value = idx;
+  document.getElementById('editTitle').value = r.title || '';
+  document.getElementById('editUrl').value = r.url || '';
+  document.getElementById('editCat').value = r.cat || 'General';
+  document.getElementById('editNotes').value = r.notes || '';
+  document.getElementById('editModal').classList.add('active');
 }
+
+function tancarModal() {
+  document.getElementById('editModal').classList.remove('active');
+}
+
+function guardarEdicio() {
+  var idx = parseInt(document.getElementById('editIdx').value);
+  var title = document.getElementById('editTitle').value.trim();
+  if (!title) { toast('⚠️ Cal un títol'); return; }
+
+  receptes[idx].title = title;
+  receptes[idx].url = document.getElementById('editUrl').value.trim();
+  receptes[idx].cat = document.getElementById('editCat').value;
+  receptes[idx].notes = document.getElementById('editNotes').value.trim();
+
+  save();
+  tancarModal();
+  renderReceptes();
+  toast('✅ Recepta actualitzada!');
+}
+
+// Tancar modal clicant fora
+document.getElementById('editModal').addEventListener('click', function(e) {
+  if (e.target === this) tancarModal();
+});
 
 // ─── AFEGIR ──────────────────────────────────────────────────────────────────
 function afegirRecepta() {
-  const title = document.getElementById('newTitle').value.trim();
+  var title = document.getElementById('newTitle').value.trim();
   if (!title) { toast('⚠️ Cal un títol'); return; }
-  const url = document.getElementById('newUrl').value.trim();
-  const catSelect = document.getElementById('newCat').value;
-  const notes = document.getElementById('newNotes').value.trim();
-  const today = new Date().toLocaleDateString('ca');
+  var url = document.getElementById('newUrl').value.trim();
+  var catSelect = document.getElementById('newCat').value;
+  var notes = document.getElementById('newNotes').value.trim();
+  var today = new Date().toLocaleDateString('ca');
 
-  const cat = (catSelect === 'auto') ? detectarCategoria(title + ' ' + url + ' ' + notes) : catSelect;
+  var cat = (catSelect === 'auto') ? detectarCategoria(title + ' ' + url + ' ' + notes) : catSelect;
 
   receptes.unshift({ title: title, url: url, cat: cat, notes: notes, date: today });
   save();
@@ -591,23 +683,23 @@ function afegirRecepta() {
 }
 
 // ─── IMPORTAR WHATSAPP ────────────────────────────────────────────────────────
-const dropZone = document.getElementById('dropZone');
+var dropZone = document.getElementById('dropZone');
 dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('drag'); });
 dropZone.addEventListener('dragleave', function() { dropZone.classList.remove('drag'); });
 dropZone.addEventListener('drop', function(e) { e.preventDefault(); dropZone.classList.remove('drag'); handleFile(e.dataTransfer.files[0]); });
 
 async function handleFile(file) {
   if (!file) return;
-  let text = '';
+  var text = '';
 
   if (file.name.endsWith('.zip')) {
-    const script = document.createElement('script');
+    var script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
     document.head.appendChild(script);
     await new Promise(function(r) { script.onload = r; });
-    const buf = await file.arrayBuffer();
-    const zip = await JSZip.loadAsync(buf);
-    const txtFile = Object.values(zip.files).find(function(f) { return f.name.endsWith('.txt'); });
+    var buf = await file.arrayBuffer();
+    var zip = await JSZip.loadAsync(buf);
+    var txtFile = Object.values(zip.files).find(function(f) { return f.name.endsWith('.txt'); });
     if (!txtFile) { toast('⚠️ No trobo fitxer .txt al zip'); return; }
     text = await txtFile.async('text');
   } else {
@@ -618,14 +710,15 @@ async function handleFile(file) {
 }
 
 function parseWhatsApp(text) {
-  const lines = text.split('\n');
-  const urlRegex = /https?:\/\/[^\s]+/g;
+  var lines = text.split('\n');
+  var urlRegex = /https?:\/\/[^\s]+/g;
 
-  const missatges = [];
-  let currentMsg = null;
+  var missatges = [];
+  var currentMsg = null;
 
-  for (const line of lines) {
-    const msgMatch = line.match(/^\d{1,2}\/\d{1,2}\/\d{2,4},?\s[\d:]+\s?[-–]\s(.+?):\s(.*)/);
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var msgMatch = line.match(/^\d{1,2}\/\d{1,2}\/\d{2,4},?\s[\d:]+\s?[-–]\s(.+?):\s(.*)/);
     if (msgMatch) {
       if (currentMsg) missatges.push(currentMsg);
       currentMsg = { autor: msgMatch[1], text: msgMatch[2] };
@@ -635,11 +728,12 @@ function parseWhatsApp(text) {
   }
   if (currentMsg) missatges.push(currentMsg);
 
-  const trobats = [];
-  for (const m of missatges) {
-    const urls = m.text.match(urlRegex);
+  var trobats = [];
+  for (var j = 0; j < missatges.length; j++) {
+    var m = missatges[j];
+    var urls = m.text.match(urlRegex);
     if (!urls) continue;
-    let titol = m.text
+    var titol = m.text
       .replace(urlRegex, '')
       .replace(/[👍🩷❤️💚🔗·.•]+/g, '')
       .replace(/\(fitxer adjunt\)/gi, '')
@@ -652,8 +746,8 @@ function parseWhatsApp(text) {
       try { titol = urls[0].replace(/https?:\/\/(www\.)?/, '').split('/')[0]; } catch(e) { titol = 'Recepta'; }
     }
 
-    for (const url of urls) {
-      trobats.push({ titol: titol || url, url: url, selected: true });
+    for (var k = 0; k < urls.length; k++) {
+      trobats.push({ titol: titol || urls[k], url: urls[k], selected: true });
     }
   }
 
@@ -669,7 +763,7 @@ function parseWhatsApp(text) {
 
 function renderImportResults(trobats) {
   window._importTrobats = trobats;
-  let html = '<div class="result-box"><h4>🔗 ' + trobats.length + ' recepta' + (trobats.length > 1 ? 'es' : '') + ' trobada' + (trobats.length > 1 ? 'es' : '') + '</h4>';
+  var html = '<div class="result-box"><h4>🔗 ' + trobats.length + ' recepta' + (trobats.length > 1 ? 'es' : '') + ' trobada' + (trobats.length > 1 ? 'es' : '') + '</h4>';
   trobats.forEach(function(t, i) {
     html += '<div class="result-item" id="ri-' + i + '">' +
       '<span class="check-icon" onclick="toggleSel(' + i + ')" id="chk-' + i + '">✅</span>' +
@@ -688,13 +782,13 @@ function toggleSel(i) {
 }
 
 function importarSeleccionades() {
-  const today = new Date().toLocaleDateString('ca');
-  let count = 0;
-  for (let i = 0; i < window._importTrobats.length; i++) {
-    const t = window._importTrobats[i];
+  var today = new Date().toLocaleDateString('ca');
+  var count = 0;
+  for (var i = 0; i < window._importTrobats.length; i++) {
+    var t = window._importTrobats[i];
     if (!t.selected) continue;
-    const title = document.getElementById('title-' + i).value.trim() || t.titol;
-    const cat = detectarCategoria(title + ' ' + t.url);
+    var title = document.getElementById('title-' + i).value.trim() || t.titol;
+    var cat = detectarCategoria(title + ' ' + t.url);
 
     if (!receptes.find(function(r) { return r.url === t.url; })) {
       receptes.unshift({ title: title, url: t.url, cat: cat, notes: '', date: today });
@@ -714,9 +808,9 @@ function importarSeleccionades() {
 // ─── EXPORTAR / IMPORTAR JSON (BACKUP) ───────────────────────────────────────
 function exportarJSON() {
   if (!receptes.length) { toast('No hi ha receptes per exportar!'); return; }
-  const blob = new Blob([JSON.stringify(receptes, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  var blob = new Blob([JSON.stringify(receptes, null, 2)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
   a.href = url;
   a.download = 'receptari_backup_' + new Date().toISOString().slice(0,10) + '.json';
   a.click();
@@ -726,12 +820,12 @@ function exportarJSON() {
 
 function importarJSON(file) {
   if (!file) return;
-  const reader = new FileReader();
+  var reader = new FileReader();
   reader.onload = function(ev) {
     try {
-      const imported = JSON.parse(ev.target.result);
+      var imported = JSON.parse(ev.target.result);
       if (!Array.isArray(imported)) throw new Error();
-      let added = 0;
+      var added = 0;
       imported.forEach(function(r) {
         if (!receptes.find(function(e) { return e.url && e.url === r.url && e.title === r.title; })) {
           receptes.push(r);
@@ -748,34 +842,51 @@ function importarJSON(file) {
   reader.readAsText(file);
 }
 
-// ─── SHARE TARGET (PWA) ─────────────────────────────────────────────────────
+// ─── SHARE TARGET (PWA) - GUARDAT AUTOMÀTIC ─────────────────────────────────
 window.addEventListener('DOMContentLoaded', function() {
-  const params = new URLSearchParams(window.location.search);
-  const sharedTitle = params.get('title') || '';
-  const sharedText = params.get('text') || '';
-  const sharedUrl = params.get('url') || '';
+  var params = new URLSearchParams(window.location.search);
+  var sharedTitle = params.get('title') || '';
+  var sharedText = params.get('text') || '';
+  var sharedUrl = params.get('url') || '';
 
   if (sharedTitle || sharedText || sharedUrl) {
-    let url = sharedUrl || '';
+    // Extreure URL del text si no ve separada
+    var url = sharedUrl || '';
     if (!url) {
-      const match = (sharedText || '').match(/https?:\/\/[^\s]+/);
+      var match = (sharedText || '').match(/https?:\/\/[^\s]+/);
       if (match) url = match[0];
     }
 
-    let title = sharedTitle || '';
-    if (!title) {
-      title = (sharedText || '').replace(/https?:\/\/[^\s]+/g, '').trim();
-      if (title.length > 100) title = title.substring(0, 100) + '...';
-      if (!title || title.length < 3) title = 'Recepta compartida';
+    // Extreure títol millorat
+    var title = sharedTitle || '';
+    if (!title || title === 'undefined') {
+      // Intentar extreure del text (primera línia sense URL)
+      var textSenseUrl = (sharedText || '').replace(/https?:\/\/[^\s]+/g, '').trim();
+      var linies = textSenseUrl.split('\n').filter(function(l) { return l.trim().length > 2; });
+      title = linies.length > 0 ? linies[0].trim() : '';
     }
+    if (!title || title.length < 3) {
+      // Usar el domini com a títol
+      try { title = url.replace(/https?:\/\/(www\.)?/, '').split('/')[0] + ' - Recepta'; } catch(e) { title = 'Recepta compartida'; }
+    }
+    if (title.length > 100) title = title.substring(0, 100) + '...';
 
-    const cat = detectarCategoria(title + ' ' + url + ' ' + sharedText);
-    const today = new Date().toLocaleDateString('ca');
+    // Classificar automàticament
+    var cat = detectarCategoria(title + ' ' + url + ' ' + sharedText);
+    var today = new Date().toLocaleDateString('ca');
 
-    receptes.unshift({ title: title, url: url, cat: cat, notes: sharedText || '', date: today });
+    // Guardar automàticament
+    receptes.unshift({
+      title: title,
+      url: url,
+      cat: cat,
+      notes: sharedText || '',
+      date: today
+    });
     save();
-    toast('✅ Recepta guardada! (' + cat + ')');
+    toast('✅ Recepta guardada! (' + cat + ') — Prem ✏️ per editar');
 
+    // Netejar URL
     window.history.replaceState({}, '', window.location.pathname);
   }
 
@@ -784,10 +895,10 @@ window.addEventListener('DOMContentLoaded', function() {
 
 // ─── TOAST ────────────────────────────────────────────────────────────────────
 function toast(msg) {
-  const t = document.getElementById('toast');
+  var t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show'); }, 2500);
+  setTimeout(function() { t.classList.remove('show'); }, 3000);
 }
 
 // ─── SERVICE WORKER ──────────────────────────────────────────────────────────
