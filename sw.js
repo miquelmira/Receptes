@@ -1,6 +1,6 @@
 
-const CACHE_NAME = 'receptes-v1';
-const ASSETS = [
+var CACHE_NAME = 'receptes-v4';
+var ASSETS = [
     '/Receptes/index.html',
     '/Receptes/manifest.json',
     '/Receptes/icon-192.png',
@@ -8,40 +8,49 @@ const ASSETS = [
 ];
 
 // Install: cache assets
-self.addEventListener('install', event => {
+self.addEventListener('install', function(event) {
     event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+        caches.open(CACHE_NAME).then(function(cache) { return cache.addAll(ASSETS); })
     );
     self.skipWaiting();
 });
 
-// Activate: clean old caches
-self.addEventListener('activate', event => {
+// Activate: delete ALL old caches
+self.addEventListener('activate', function(event) {
     event.waitUntil(
-        caches.keys().then(keys =>
-            Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-        )
+        caches.keys().then(function(keys) {
+            return Promise.all(
+                keys.filter(function(k) { return k !== CACHE_NAME; })
+                    .map(function(k) { return caches.delete(k); })
+            );
+        })
     );
     self.clients.claim();
 });
 
-// Fetch: cache-first strategy
-self.addEventListener('fetch', event => {
-    // Let share target requests pass through
-    if (event.request.url.includes('?title=') || 
-        event.request.url.includes('?text=') || 
-        event.request.url.includes('?url=')) {
+// Fetch: NETWORK-FIRST strategy (always tries to get fresh version)
+self.addEventListener('fetch', function(event) {
+    // Let share target requests pass through always
+    if (event.request.url.indexOf('?title=') >= 0 ||
+        event.request.url.indexOf('?text=') >= 0 ||
+        event.request.url.indexOf('?url=') >= 0) {
         return;
     }
-    
+
     event.respondWith(
-        caches.match(event.request).then(cached => {
-            return cached || fetch(event.request).then(response => {
-                const clone = response.clone();
-                caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-                return response;
+        fetch(event.request).then(function(response) {
+            // Got fresh response, update cache
+            var clone = response.clone();
+            caches.open(CACHE_NAME).then(function(cache) {
+                cache.put(event.request, clone);
             });
-        }).catch(() => caches.match('/Receptes/index.html'))
+            return response;
+        }).catch(function() {
+            // Network failed, use cache (offline mode)
+            return caches.match(event.request).then(function(cached) {
+                return cached || caches.match('/Receptes/index.html');
+            });
+        })
     );
 });
 

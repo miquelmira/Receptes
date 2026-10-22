@@ -114,6 +114,10 @@
     overflow: hidden;
     animation: fadeIn 0.3s ease;
   }
+  .card.needs-edit {
+    border-color: var(--accent);
+    border-width: 2px;
+  }
   @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
 
   .card-header {
@@ -157,6 +161,13 @@
     color: var(--accent);
   }
 
+  .card-edit-hint {
+    padding: 4px 14px 8px;
+    font-size: 11px;
+    color: var(--accent2);
+    font-style: italic;
+  }
+
   .card-actions {
     padding: 0 14px 12px;
     display: flex;
@@ -179,8 +190,10 @@
   .btn-primary:hover { background: var(--accent2); }
   .btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
   .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-edit { background: var(--surface2); color: var(--accent); border: 1px solid var(--accent); }
-  .btn-edit:hover { background: var(--accent); color: #0f0f07; }
+  .btn-edit { background: var(--accent); color: #0f0f07; }
+  .btn-edit:hover { background: var(--accent2); }
+  .btn-edit-highlight { background: var(--accent2); color: #0f0f07; font-weight: 700; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.7; } }
   .btn-danger { background: transparent; color: var(--red); border: 1px solid #5a1a14; }
   .btn-danger:hover { background: #5a1a14; }
   .btn-full { width: 100%; text-align: center; padding: 12px; font-size: 14px; border-radius: var(--radius); }
@@ -357,7 +370,7 @@
     display: none;
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.8);
     z-index: 200;
     justify-content: center;
     align-items: flex-start;
@@ -379,7 +392,13 @@
     font-family: 'Playfair Display', serif;
     font-size: 18px;
     color: var(--accent2);
+    margin-bottom: 6px;
+  }
+  .modal .modal-hint {
+    font-size: 12px;
+    color: var(--text2);
     margin-bottom: 16px;
+    font-style: italic;
   }
   .modal-actions {
     display: flex;
@@ -433,8 +452,9 @@
   <div class="section-title">Nova recepta</div>
   <div class="form-group">
     <label>Títol *</label>
-    <input type="text" id="newTitle" placeholder="Ex: Mousse de xocolata">
+    <input type="text" id="newTitle" placeholder="Ex: Mousse de xocolata" oninput="previewCategoria()">
   </div>
+  <div id="catPreview" style="font-size:11px;color:var(--accent);margin:-10px 0 14px;padding-left:2px"></div>
   <div class="form-group">
     <label>URL (opcional)</label>
     <input type="url" id="newUrl" placeholder="https://...">
@@ -442,16 +462,16 @@
   <div class="form-group">
     <label>Categoria</label>
     <select id="newCat">
-      <option value="auto">🤖 Automàtica (detectar)</option>
-      <option value="General">General</option>
-      <option value="Postres">Postres</option>
-      <option value="Carns">Carns</option>
-      <option value="Peixos">Peixos</option>
-      <option value="Verdures">Verdures</option>
-      <option value="Pasta i arròs">Pasta i arròs</option>
-      <option value="Aperitius">Aperitius</option>
-      <option value="Thermomix">Thermomix</option>
-      <option value="Tapes">Tapes</option>
+      <option value="auto">🤖 Automàtica (detectar pel títol)</option>
+      <option value="General">🍽 General</option>
+      <option value="Postres">🍮 Postres</option>
+      <option value="Carns">🥩 Carns</option>
+      <option value="Peixos">🐟 Peixos</option>
+      <option value="Verdures">🥦 Verdures</option>
+      <option value="Pasta i arròs">🍝 Pasta i arròs</option>
+      <option value="Aperitius">🥗 Aperitius</option>
+      <option value="Thermomix">⚙️ Thermomix</option>
+      <option value="Tapes">🫙 Tapes</option>
     </select>
   </div>
   <div class="form-group">
@@ -465,11 +485,13 @@
 <div class="modal-overlay" id="editModal">
   <div class="modal">
     <h2>✏️ Editar recepta</h2>
+    <div class="modal-hint" id="editHint"></div>
     <input type="hidden" id="editIdx">
     <div class="form-group">
       <label>Títol *</label>
-      <input type="text" id="editTitle" placeholder="Nom de la recepta">
+      <input type="text" id="editTitle" placeholder="Nom de la recepta" oninput="previewEditCategoria()">
     </div>
+    <div id="editCatPreview" style="font-size:11px;color:var(--accent);margin:-10px 0 14px;padding-left:2px"></div>
     <div class="form-group">
       <label>URL</label>
       <input type="url" id="editUrl" placeholder="https://...">
@@ -477,15 +499,16 @@
     <div class="form-group">
       <label>Categoria</label>
       <select id="editCat">
-        <option value="General">General</option>
-        <option value="Postres">Postres</option>
-        <option value="Carns">Carns</option>
-        <option value="Peixos">Peixos</option>
-        <option value="Verdures">Verdures</option>
-        <option value="Pasta i arròs">Pasta i arròs</option>
-        <option value="Aperitius">Aperitius</option>
-        <option value="Thermomix">Thermomix</option>
-        <option value="Tapes">Tapes</option>
+        <option value="auto">🤖 Automàtica (detectar pel títol)</option>
+        <option value="General">🍽 General</option>
+        <option value="Postres">🍮 Postres</option>
+        <option value="Carns">🥩 Carns</option>
+        <option value="Peixos">🐟 Peixos</option>
+        <option value="Verdures">🥦 Verdures</option>
+        <option value="Pasta i arròs">🍝 Pasta i arròs</option>
+        <option value="Aperitius">🥗 Aperitius</option>
+        <option value="Thermomix">⚙️ Thermomix</option>
+        <option value="Tapes">🫙 Tapes</option>
       </select>
     </div>
     <div class="form-group">
@@ -503,10 +526,10 @@
 
 <script>
 // ─── DADES ───────────────────────────────────────────────────────────────────
-let receptes = JSON.parse(localStorage.getItem('receptes') || '[]');
-let catActiva = 'Totes';
+var receptes = JSON.parse(localStorage.getItem('receptes') || '[]');
+var catActiva = 'Totes';
 
-const EMOJIS = {
+var EMOJIS = {
   'Postres': '🍮', 'Carns': '🥩', 'Peixos': '🐟', 'Verdures': '🥦',
   'Pasta i arròs': '🍝', 'Aperitius': '🥗', 'Thermomix': '⚙️',
   'Tapes': '🫙', 'General': '🍽'
@@ -525,13 +548,52 @@ function updateCounter() {
 function detectarCategoria(text) {
   var t = (text || '').toLowerCase();
   if (/thermomix/i.test(t)) return 'Thermomix';
-  if (/postre|mousse|natilla|xocolata|chocolate|trufa|espuma|pastís|pastis|cake|torta|flan|gelat|galeta|brownie|tiramisu|crema catalana|bunyol|coca|magdalena|muffin|tarta|bizcocho|cheesecake|cookie/i.test(t)) return 'Postres';
-  if (/pollastre|pollo|carn|carne|llom|bistec|pechuga|costella|hamburguesa|estofat|guisat|vedella|xai|porc|conill|pernil|filet|entrecot|albondig/i.test(t)) return 'Carns';
-  if (/peix|pesca|atun|atún|boquer|anxova|salmó|salmon|bacallà|bacalao|gamb|llagost|musclo|calamar|pop|tonyina|lluç|sardina|truita de riu/i.test(t)) return 'Peixos';
-  if (/amanida|ensalada|verdur|bròquil|espinac|carbass|alberg|tomàquet|ceba|pastanaga|mongeta verda|xampiny|bolet|escalivada/i.test(t)) return 'Verdures';
-  if (/sándwich|sandwich|sandvitx|empanadilla|focaccia|foccacia|tapa|aperitiu|croqueta|pintxo|pincho|canap|bruschet|hummus/i.test(t)) return 'Tapes';
-  if (/pasta|arròs|arros|espagueti|macarr|risotto|lasanya|canelo|fideu|paella|noodle|ravioli|tallarí|carbonara|bolonyesa/i.test(t)) return 'Pasta i arròs';
+  if (/postre|mousse|natilla|xocolata|chocolate|trufa|espuma|pastís|pastis|cake|torta|flan|gelat|galeta|brownie|tiramisu|crema catalana|bunyol|coca|magdalena|muffin|tarta|bizcocho|cheesecake|cookie|bombó|merengue|sorbet/i.test(t)) return 'Postres';
+  if (/pollastre|pollo|carn|carne|llom|bistec|pechuga|costella|hamburguesa|estofat|guisat|vedella|xai|porc|conill|pernil|filet|entrecot|albondig|mandonguill|botifarra/i.test(t)) return 'Carns';
+  if (/peix|pesca|atun|atún|boquer|anxova|salmó|salmon|bacallà|bacalao|gamb|llagost|musclo|calamar|pop|tonyina|lluç|sardina|truita de riu|marisc|sepia/i.test(t)) return 'Peixos';
+  if (/amanida|ensalada|verdur|bròquil|espinac|carbass|alberg|tomàquet|ceba|pastanaga|mongeta verda|xampiny|bolet|escalivada|crema de|puré/i.test(t)) return 'Verdures';
+  if (/sándwich|sandwich|sandvitx|empanadilla|focaccia|foccacia|tapa|aperitiu|croqueta|pintxo|pincho|canap|bruschet|hummus|guacamole|nachos/i.test(t)) return 'Tapes';
+  if (/pasta|arròs|arros|espagueti|macarr|risotto|lasanya|canelo|fideu|paella|noodle|ravioli|tallarí|carbonara|bolonyesa|penne|fusilli/i.test(t)) return 'Pasta i arròs';
   return 'General';
+}
+
+// Detectar si un títol és genèric (necessita edició)
+function esGeneric(title) {
+  if (!title) return true;
+  var t = title.toLowerCase();
+  return (t.indexOf('recepta compartida') >= 0 ||
+          t.indexOf('recepta') === 0 && t.length < 15 ||
+          t.indexOf('instagram.com') >= 0 ||
+          t.indexOf('tiktok.com') >= 0 ||
+          t.indexOf('facebook.com') >= 0 ||
+          t.indexOf('youtube.com') >= 0 ||
+          t.indexOf('youtu.be') >= 0 ||
+          t.length < 4);
+}
+
+// Preview de categoria en temps real
+function previewCategoria() {
+  var title = document.getElementById('newTitle').value.trim();
+  var cat = detectarCategoria(title);
+  var emoji = EMOJIS[cat] || '🍽';
+  var el = document.getElementById('catPreview');
+  if (title.length > 2) {
+    el.textContent = '→ Categoria detectada: ' + emoji + ' ' + cat;
+  } else {
+    el.textContent = '';
+  }
+}
+
+function previewEditCategoria() {
+  var title = document.getElementById('editTitle').value.trim();
+  var cat = detectarCategoria(title);
+  var emoji = EMOJIS[cat] || '🍽';
+  var el = document.getElementById('editCatPreview');
+  if (title.length > 2) {
+    el.textContent = '→ Categoria detectada: ' + emoji + ' ' + cat;
+  } else {
+    el.textContent = '';
+  }
 }
 
 // ─── TABS ────────────────────────────────────────────────────────────────────
@@ -555,7 +617,7 @@ function showTabById(id) {
 function renderReceptes() {
   var q = document.getElementById('searchInput').value.toLowerCase();
   var filtrades = receptes.filter(function(r) {
-    var matchQ = !q || r.title.toLowerCase().includes(q) || (r.notes || '').toLowerCase().includes(q) || (r.url || '').toLowerCase().includes(q);
+    var matchQ = !q || r.title.toLowerCase().indexOf(q) >= 0 || (r.notes || '').toLowerCase().indexOf(q) >= 0 || (r.url || '').toLowerCase().indexOf(q) >= 0;
     var matchCat = catActiva === 'Totes' || r.cat === catActiva;
     return matchQ && matchCat;
   });
@@ -572,7 +634,7 @@ function renderReceptes() {
   if (filtrades.length === 0) {
     lista.innerHTML = '<div class="empty"><div class="icon">🥄</div><h3>' +
       (receptes.length === 0 ? 'Sense receptes' : 'Cap resultat') + '</h3><p>' +
-      (receptes.length === 0 ? 'Importa un xat de WhatsApp, comparteix des d\'una app o afegeix receptes manualment.' : 'Prova amb una altra cerca o categoria.') +
+      (receptes.length === 0 ? 'Comparteix des d\'Instagram o WhatsApp, importa un xat o afegeix receptes manualment.' : 'Prova amb una altra cerca o categoria.') +
       '</p></div>';
     return;
   }
@@ -580,21 +642,29 @@ function renderReceptes() {
   lista.innerHTML = filtrades.map(function(r) {
     var idx = receptes.indexOf(r);
     var emoji = EMOJIS[r.cat] || '🍽';
-    var hasNotes = r.notes && r.notes.trim();
-    var html = '<div class="card">';
+    var hasNotes = r.notes && r.notes.trim() && r.notes.trim() !== r.url;
+    var generic = esGeneric(r.title);
+    var html = '<div class="card' + (generic ? ' needs-edit' : '') + '">';
     html += '<div class="card-header"><div class="card-icon">' + emoji + '</div>';
     html += '<div class="card-info"><div class="card-title">' + escHtml(r.title) + '</div>';
     html += '<div class="card-meta"><span class="tag">' + r.cat + '</span>';
     if (r.date) html += '<span>' + r.date + '</span>';
-    if (r.url) html += '<span style="color:var(--accent);font-size:10px">🔗 ' + escHtml(r.url.replace(/https?:\/\/(www\.)?/, '').split('/')[0]) + '</span>';
+    if (r.url) {
+      var domini = '';
+      try { domini = r.url.replace(/https?:\/\/(www\.)?/, '').split('/')[0]; } catch(e) { domini = ''; }
+      if (domini) html += '<span style="color:var(--accent);font-size:10px">🔗 ' + escHtml(domini) + '</span>';
+    }
     html += '</div></div></div>';
+    if (generic) {
+      html += '<div class="card-edit-hint">⚠️ Posa un nom descriptiu per classificar-la automàticament</div>';
+    }
     if (hasNotes) {
       html += '<div class="card-notes-toggle" onclick="toggleNotes(this)">▸ Veure notes</div>';
       html += '<div class="card-notes"><div style="padding:0 14px 12px;font-size:12px;color:var(--text2);line-height:1.6;white-space:pre-wrap">' + escHtml(r.notes) + '</div></div>';
     }
     html += '<div class="card-actions">';
     if (r.url) html += '<a href="' + r.url + '" target="_blank" class="btn btn-primary">🔗 Obrir</a>';
-    html += '<button class="btn btn-edit" onclick="obrirEdicio(' + idx + ')">✏️ Editar</button>';
+    html += '<button class="btn ' + (generic ? 'btn-edit-highlight' : 'btn-edit') + '" onclick="obrirEdicio(' + idx + ')">✏️ Editar</button>';
     html += '<button class="btn btn-danger" onclick="eliminar(' + idx + ')">🗑</button>';
     html += '</div></div>';
     return html;
@@ -631,9 +701,18 @@ function obrirEdicio(idx) {
   document.getElementById('editIdx').value = idx;
   document.getElementById('editTitle').value = r.title || '';
   document.getElementById('editUrl').value = r.url || '';
-  document.getElementById('editCat').value = r.cat || 'General';
-  document.getElementById('editNotes').value = r.notes || '';
+  document.getElementById('editCat').value = 'auto';
+  document.getElementById('editNotes').value = (r.notes && r.notes !== r.url) ? r.notes : '';
   document.getElementById('editModal').classList.add('active');
+
+  if (esGeneric(r.title)) {
+    document.getElementById('editHint').textContent = '💡 Escriu un títol descriptiu (ex: "Mousse de xocolata") i la categoria es detectarà sola!';
+    document.getElementById('editTitle').value = '';
+    document.getElementById('editTitle').focus();
+  } else {
+    document.getElementById('editHint').textContent = '';
+  }
+  previewEditCategoria();
 }
 
 function tancarModal() {
@@ -645,18 +724,20 @@ function guardarEdicio() {
   var title = document.getElementById('editTitle').value.trim();
   if (!title) { toast('⚠️ Cal un títol'); return; }
 
+  var catSelect = document.getElementById('editCat').value;
+  var cat = (catSelect === 'auto') ? detectarCategoria(title) : catSelect;
+
   receptes[idx].title = title;
   receptes[idx].url = document.getElementById('editUrl').value.trim();
-  receptes[idx].cat = document.getElementById('editCat').value;
+  receptes[idx].cat = cat;
   receptes[idx].notes = document.getElementById('editNotes').value.trim();
 
   save();
   tancarModal();
   renderReceptes();
-  toast('✅ Recepta actualitzada!');
+  toast('✅ ' + title + ' → ' + (EMOJIS[cat] || '') + ' ' + cat);
 }
 
-// Tancar modal clicant fora
 document.getElementById('editModal').addEventListener('click', function(e) {
   if (e.target === this) tancarModal();
 });
@@ -670,7 +751,7 @@ function afegirRecepta() {
   var notes = document.getElementById('newNotes').value.trim();
   var today = new Date().toLocaleDateString('ca');
 
-  var cat = (catSelect === 'auto') ? detectarCategoria(title + ' ' + url + ' ' + notes) : catSelect;
+  var cat = (catSelect === 'auto') ? detectarCategoria(title + ' ' + notes) : catSelect;
 
   receptes.unshift({ title: title, url: url, cat: cat, notes: notes, date: today });
   save();
@@ -678,7 +759,8 @@ function afegirRecepta() {
   document.getElementById('newUrl').value = '';
   document.getElementById('newNotes').value = '';
   document.getElementById('newCat').value = 'auto';
-  toast('✅ Recepta desada! (' + cat + ')');
+  document.getElementById('catPreview').textContent = '';
+  toast('✅ ' + title + ' → ' + (EMOJIS[cat] || '') + ' ' + cat);
   showTabById('receptes');
 }
 
@@ -743,7 +825,7 @@ function parseWhatsApp(text) {
 
     if (titol.length > 100) titol = titol.substring(0, 100) + '...';
     if (!titol || titol.length < 3) {
-      try { titol = urls[0].replace(/https?:\/\/(www\.)?/, '').split('/')[0]; } catch(e) { titol = 'Recepta'; }
+      try { titol = urls[0].replace(/https?:\/\/(www\.)?/, '').split('/')[0] + ' - Recepta'; } catch(e) { titol = 'Recepta'; }
     }
 
     for (var k = 0; k < urls.length; k++) {
@@ -850,7 +932,7 @@ window.addEventListener('DOMContentLoaded', function() {
   var sharedUrl = params.get('url') || '';
 
   if (sharedTitle || sharedText || sharedUrl) {
-    // Extreure URL del text si no ve separada
+    // Extreure URL
     var url = sharedUrl || '';
     if (!url) {
       var match = (sharedText || '').match(/https?:\/\/[^\s]+/);
@@ -859,35 +941,50 @@ window.addEventListener('DOMContentLoaded', function() {
 
     // Extreure títol millorat
     var title = sharedTitle || '';
-    if (!title || title === 'undefined') {
-      // Intentar extreure del text (primera línia sense URL)
+    if (!title || title === 'undefined' || title === 'null') {
       var textSenseUrl = (sharedText || '').replace(/https?:\/\/[^\s]+/g, '').trim();
-      var linies = textSenseUrl.split('\n').filter(function(l) { return l.trim().length > 2; });
-      title = linies.length > 0 ? linies[0].trim() : '';
+      var linies = textSenseUrl.split('\n');
+      for (var i = 0; i < linies.length; i++) {
+        if (linies[i].trim().length > 2) { title = linies[i].trim(); break; }
+      }
     }
     if (!title || title.length < 3) {
-      // Usar el domini com a títol
       try { title = url.replace(/https?:\/\/(www\.)?/, '').split('/')[0] + ' - Recepta'; } catch(e) { title = 'Recepta compartida'; }
     }
     if (title.length > 100) title = title.substring(0, 100) + '...';
 
-    // Classificar automàticament
+    // Classificar
     var cat = detectarCategoria(title + ' ' + url + ' ' + sharedText);
     var today = new Date().toLocaleDateString('ca');
+
+    // Notes: només si el text no és la mateixa URL
+    var notes = '';
+    if (sharedText && sharedText.trim() !== url) {
+      notes = sharedText.replace(/https?:\/\/[^\s]+/g, '').trim();
+    }
 
     // Guardar automàticament
     receptes.unshift({
       title: title,
       url: url,
       cat: cat,
-      notes: sharedText || '',
+      notes: notes,
       date: today
     });
     save();
-    toast('✅ Recepta guardada! (' + cat + ') — Prem ✏️ per editar');
 
     // Netejar URL
     window.history.replaceState({}, '', window.location.pathname);
+
+    // Si el títol és genèric, obrir modal d'edició automàticament
+    if (esGeneric(title)) {
+      setTimeout(function() {
+        obrirEdicio(0);
+        toast('📥 Recepta guardada! Posa-li un nom 👇');
+      }, 500);
+    } else {
+      toast('✅ ' + title + ' → ' + (EMOJIS[cat] || '') + ' ' + cat);
+    }
   }
 
   renderReceptes();
@@ -898,7 +995,7 @@ function toast(msg) {
   var t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show'); }, 3000);
+  setTimeout(function() { t.classList.remove('show'); }, 3500);
 }
 
 // ─── SERVICE WORKER ──────────────────────────────────────────────────────────
