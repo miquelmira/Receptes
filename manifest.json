@@ -1,12 +1,12 @@
 
 {
-    "name": "Les Meves Receptes",
-    "short_name": "Receptes",
-    "description": "La teva col·lecció personal de receptes",
+    "name": "El Meu Receptari",
+    "short_name": "Receptari",
+    "description": "Les teves receptes preferides",
     "start_url": "/Receptes/index.html",
     "display": "standalone",
-    "background_color": "#fafafa",
-    "theme_color": "#e74c3c",
+    "background_color": "#0f0f07",
+    "theme_color": "#1a1a0e",
     "orientation": "portrait",
     "icons": [
         {
