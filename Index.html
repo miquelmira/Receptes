@@ -1,0 +1,912 @@
+
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1a1a0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>El Meu Receptari</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f07;
+    --surface: #1c1c10;
+    --surface2: #252516;
+    --border: #3a3a20;
+    --accent: #c8a84b;
+    --accent2: #e8c66a;
+    --text: #f0ead6;
+    --text2: #a09880;
+    --red: #c0392b;
+    --green: #27ae60;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--accent2);
+    letter-spacing: 0.5px;
+  }
+  header p {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 2px;
+  }
+
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 64px;
+    z-index: 99;
+  }
+  .tab {
+    flex: 1;
+    padding: 10px 4px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .panel { display: none; padding: 16px; }
+  .panel.active { display: block; }
+
+  .search-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .search-bar input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+  }
+  .search-bar input:focus { border-color: var(--accent); }
+  .search-bar input::placeholder { color: var(--text2); }
+
+  .cards { display: flex; flex-direction: column; gap: 10px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+  .card-header {
+    padding: 12px 14px 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .card-info { flex: 1; min-width: 0; }
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+  .card-meta {
+    font-size: 11px;
+    color: var(--text2);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-size: 10px;
+    color: var(--accent);
+  }
+
+  .card-actions {
+    padding: 0 14px 12px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    border: none;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-primary { background: var(--accent); color: #0f0f07; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-edit { background: var(--surface2); color: var(--accent); border: 1px solid var(--accent); }
+  .btn-edit:hover { background: var(--accent); color: #0f0f07; }
+  .btn-danger { background: transparent; color: var(--red); border: 1px solid #5a1a14; }
+  .btn-danger:hover { background: #5a1a14; }
+  .btn-full { width: 100%; text-align: center; padding: 12px; font-size: 14px; border-radius: var(--radius); }
+
+  .card-notes {
+    padding: 0 14px 12px;
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.5;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    margin-top: -2px;
+  }
+
+  .import-zone {
+    background: var(--surface);
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    margin-bottom: 16px;
+  }
+  .import-zone:hover, .import-zone.drag { border-color: var(--accent); }
+  .import-zone .icon { font-size: 40px; margin-bottom: 10px; }
+  .import-zone h3 { font-family: 'Playfair Display', serif; font-size: 17px; color: var(--accent); margin-bottom: 6px; }
+  .import-zone p { font-size: 12px; color: var(--text2); line-height: 1.5; }
+  #fileInput { display: none; }
+
+  .result-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .result-box h4 { font-size: 13px; color: var(--accent); margin-bottom: 8px; }
+  .result-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .result-item:last-child { border-bottom: none; }
+  .result-item .url { color: var(--text2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .result-item .title-edit {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    color: var(--text);
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    width: 100%;
+    margin: 4px 0;
+  }
+  .check-icon { font-size: 16px; cursor: pointer; }
+
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
+  .form-group input, .form-group textarea, .form-group select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+  }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--accent); }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-group select option { background: var(--surface2); }
+
+  .empty {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text2);
+  }
+  .empty .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty h3 { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--text2); margin-bottom: 6px; }
+  .empty p { font-size: 13px; line-height: 1.5; }
+
+  .cat-filter {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    margin-bottom: 14px;
+    scrollbar-width: none;
+  }
+  .cat-filter::-webkit-scrollbar { display: none; }
+  .cat-btn {
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--surface2);
+    color: var(--text2);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .cat-btn.active { background: var(--accent); color: #0f0f07; border-color: var(--accent); font-weight: 500; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--accent);
+    color: #0f0f07;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 999;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .counter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent);
+    color: #0f0f07;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 18px;
+    height: 16px;
+    padding: 0 5px;
+    margin-left: 5px;
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-notes-toggle {
+    padding: 0 14px 10px;
+    font-size: 11px;
+    color: var(--accent);
+    cursor: pointer;
+  }
+  .card-notes { display: none; }
+  .card-notes.visible { display: block; }
+
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .toolbar .btn { flex: 1; text-align: center; }
+
+  /* MODAL EDITAR */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    width: 100%;
+    max-width: 460px;
+    margin-top: 30px;
+    animation: fadeIn 0.3s ease;
+  }
+  .modal h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--accent2);
+    margin-bottom: 16px;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .modal-actions .btn { flex: 1; padding: 12px; text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍽 El Meu Receptari</h1>
+  <p>Les teves receptes preferides</p>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('receptes')">📖 Receptes <span class="counter" id="cnt">0</span></div>
+  <div class="tab" onclick="showTab('importar')">📱 WhatsApp</div>
+  <div class="tab" onclick="showTab('afegir')">➕ Afegir</div>
+</div>
+
+<!-- PANEL RECEPTES -->
+<div class="panel active" id="tab-receptes">
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="🔍 Cercar receptes..." oninput="renderReceptes()">
+  </div>
+  <div class="cat-filter" id="catFilter"></div>
+  <div class="cards" id="listaReceptes"></div>
+  <div class="toolbar">
+    <button class="btn btn-ghost" onclick="exportarJSON()">📤 Exportar backup</button>
+    <button class="btn btn-ghost" onclick="document.getElementById('importJSON').click()">📥 Importar backup</button>
+  </div>
+  <input type="file" id="importJSON" accept=".json" style="display:none" onchange="importarJSON(this.files[0])">
+</div>
+
+<!-- PANEL IMPORTAR -->
+<div class="panel" id="tab-importar">
+  <div class="import-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+    <div class="icon">💬</div>
+    <h3>Importa un xat de WhatsApp</h3>
+    <p>Toca aquí per seleccionar el fitxer .txt exportat de WhatsApp<br><br>
+    <small>A WhatsApp → Obrir xat → ··· → Més → Exportar xat → Sense mitjans</small></p>
+  </div>
+  <input type="file" id="fileInput" accept=".txt,.zip" onchange="handleFile(this.files[0])">
+  <div id="importResults"></div>
+</div>
+
+<!-- PANEL AFEGIR -->
+<div class="panel" id="tab-afegir">
+  <div class="section-title">Nova recepta</div>
+  <div class="form-group">
+    <label>Títol *</label>
+    <input type="text" id="newTitle" placeholder="Ex: Mousse de xocolata">
+  </div>
+  <div class="form-group">
+    <label>URL (opcional)</label>
+    <input type="url" id="newUrl" placeholder="https://...">
+  </div>
+  <div class="form-group">
+    <label>Categoria</label>
+    <select id="newCat">
+      <option value="auto">🤖 Automàtica (detectar)</option>
+      <option value="General">General</option>
+      <option value="Postres">Postres</option>
+      <option value="Carns">Carns</option>
+      <option value="Peixos">Peixos</option>
+      <option value="Verdures">Verdures</option>
+      <option value="Pasta i arròs">Pasta i arròs</option>
+      <option value="Aperitius">Aperitius</option>
+      <option value="Thermomix">Thermomix</option>
+      <option value="Tapes">Tapes</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>Notes / Ingredients</label>
+    <textarea id="newNotes" placeholder="Ingredients, consells, variacions..."></textarea>
+  </div>
+  <button class="btn btn-primary btn-full" onclick="afegirRecepta()">Desar recepta</button>
+</div>
+
+<!-- MODAL EDITAR -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h2>✏️ Editar recepta</h2>
+    <input type="hidden" id="editIdx">
+    <div class="form-group">
+      <label>Títol *</label>
+      <input type="text" id="editTitle" placeholder="Nom de la recepta">
+    </div>
+    <div class="form-group">
+      <label>URL</label>
+      <input type="url" id="editUrl" placeholder="https://...">
+    </div>
+    <div class="form-group">
+      <label>Categoria</label>
+      <select id="editCat">
+        <option value="General">General</option>
+        <option value="Postres">Postres</option>
+        <option value="Carns">Carns</option>
+        <option value="Peixos">Peixos</option>
+        <option value="Verdures">Verdures</option>
+        <option value="Pasta i arròs">Pasta i arròs</option>
+        <option value="Aperitius">Aperitius</option>
+        <option value="Thermomix">Thermomix</option>
+        <option value="Tapes">Tapes</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Notes / Ingredients</label>
+      <textarea id="editNotes" placeholder="Ingredients, consells, variacions..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="tancarModal()">Cancel·lar</button>
+      <button class="btn btn-primary" onclick="guardarEdicio()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DADES ───────────────────────────────────────────────────────────────────
+let receptes = JSON.parse(localStorage.getItem('receptes') || '[]');
+let catActiva = 'Totes';
+
+const EMOJIS = {
+  'Postres': '🍮', 'Carns': '🥩', 'Peixos': '🐟', 'Verdures': '🥦',
+  'Pasta i arròs': '🍝', 'Aperitius': '🥗', 'Thermomix': '⚙️',
+  'Tapes': '🫙', 'General': '🍽'
+};
+
+function save() {
+  localStorage.setItem('receptes', JSON.stringify(receptes));
+  updateCounter();
+}
+
+function updateCounter() {
+  document.getElementById('cnt').textContent = receptes.length;
+}
+
+// ─── CLASSIFICACIÓ AUTOMÀTICA ────────────────────────────────────────────────
+function detectarCategoria(text) {
+  var t = (text || '').toLowerCase();
+  if (/thermomix/i.test(t)) return 'Thermomix';
+  if (/postre|mousse|natilla|xocolata|chocolate|trufa|espuma|pastís|pastis|cake|torta|flan|gelat|galeta|brownie|tiramisu|crema catalana|bunyol|coca|magdalena|muffin|tarta|bizcocho|cheesecake|cookie/i.test(t)) return 'Postres';
+  if (/pollastre|pollo|carn|carne|llom|bistec|pechuga|costella|hamburguesa|estofat|guisat|vedella|xai|porc|conill|pernil|filet|entrecot|albondig/i.test(t)) return 'Carns';
+  if (/peix|pesca|atun|atún|boquer|anxova|salmó|salmon|bacallà|bacalao|gamb|llagost|musclo|calamar|pop|tonyina|lluç|sardina|truita de riu/i.test(t)) return 'Peixos';
+  if (/amanida|ensalada|verdur|bròquil|espinac|carbass|alberg|tomàquet|ceba|pastanaga|mongeta verda|xampiny|bolet|escalivada/i.test(t)) return 'Verdures';
+  if (/sándwich|sandwich|sandvitx|empanadilla|focaccia|foccacia|tapa|aperitiu|croqueta|pintxo|pincho|canap|bruschet|hummus/i.test(t)) return 'Tapes';
+  if (/pasta|arròs|arros|espagueti|macarr|risotto|lasanya|canelo|fideu|paella|noodle|ravioli|tallarí|carbonara|bolonyesa/i.test(t)) return 'Pasta i arròs';
+  return 'General';
+}
+
+// ─── TABS ────────────────────────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  document.getElementById('tab-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (id === 'receptes') renderReceptes();
+}
+
+function showTabById(id) {
+  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  document.getElementById('tab-' + id).classList.add('active');
+  document.querySelector('.tab:first-child').classList.add('active');
+  renderReceptes();
+}
+
+// ─── RENDER RECEPTES ─────────────────────────────────────────────────────────
+function renderReceptes() {
+  var q = document.getElementById('searchInput').value.toLowerCase();
+  var filtrades = receptes.filter(function(r) {
+    var matchQ = !q || r.title.toLowerCase().includes(q) || (r.notes || '').toLowerCase().includes(q) || (r.url || '').toLowerCase().includes(q);
+    var matchCat = catActiva === 'Totes' || r.cat === catActiva;
+    return matchQ && matchCat;
+  });
+
+  var cats = ['Totes'];
+  var seen = {};
+  receptes.forEach(function(r) { if (!seen[r.cat]) { seen[r.cat] = true; cats.push(r.cat); } });
+  var cf = document.getElementById('catFilter');
+  cf.innerHTML = cats.map(function(c) {
+    return '<button class="cat-btn ' + (c === catActiva ? 'active' : '') + '" onclick="setCat(\'' + c + '\')">' + c + '</button>';
+  }).join('');
+
+  var lista = document.getElementById('listaReceptes');
+  if (filtrades.length === 0) {
+    lista.innerHTML = '<div class="empty"><div class="icon">🥄</div><h3>' +
+      (receptes.length === 0 ? 'Sense receptes' : 'Cap resultat') + '</h3><p>' +
+      (receptes.length === 0 ? 'Importa un xat de WhatsApp, comparteix des d\'una app o afegeix receptes manualment.' : 'Prova amb una altra cerca o categoria.') +
+      '</p></div>';
+    return;
+  }
+
+  lista.innerHTML = filtrades.map(function(r) {
+    var idx = receptes.indexOf(r);
+    var emoji = EMOJIS[r.cat] || '🍽';
+    var hasNotes = r.notes && r.notes.trim();
+    var html = '<div class="card">';
+    html += '<div class="card-header"><div class="card-icon">' + emoji + '</div>';
+    html += '<div class="card-info"><div class="card-title">' + escHtml(r.title) + '</div>';
+    html += '<div class="card-meta"><span class="tag">' + r.cat + '</span>';
+    if (r.date) html += '<span>' + r.date + '</span>';
+    if (r.url) html += '<span style="color:var(--accent);font-size:10px">🔗 ' + escHtml(r.url.replace(/https?:\/\/(www\.)?/, '').split('/')[0]) + '</span>';
+    html += '</div></div></div>';
+    if (hasNotes) {
+      html += '<div class="card-notes-toggle" onclick="toggleNotes(this)">▸ Veure notes</div>';
+      html += '<div class="card-notes"><div style="padding:0 14px 12px;font-size:12px;color:var(--text2);line-height:1.6;white-space:pre-wrap">' + escHtml(r.notes) + '</div></div>';
+    }
+    html += '<div class="card-actions">';
+    if (r.url) html += '<a href="' + r.url + '" target="_blank" class="btn btn-primary">🔗 Obrir</a>';
+    html += '<button class="btn btn-edit" onclick="obrirEdicio(' + idx + ')">✏️ Editar</button>';
+    html += '<button class="btn btn-danger" onclick="eliminar(' + idx + ')">🗑</button>';
+    html += '</div></div>';
+    return html;
+  }).join('');
+}
+
+function escHtml(t) {
+  return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function toggleNotes(el) {
+  var notes = el.nextElementSibling;
+  notes.classList.toggle('visible');
+  el.textContent = notes.classList.contains('visible') ? '▾ Amagar notes' : '▸ Veure notes';
+}
+
+function setCat(c) {
+  catActiva = c;
+  renderReceptes();
+}
+
+function eliminar(idx) {
+  if (confirm('Eliminar "' + receptes[idx].title + '"?')) {
+    receptes.splice(idx, 1);
+    save();
+    renderReceptes();
+    toast('Recepta eliminada');
+  }
+}
+
+// ─── EDITAR RECEPTA (MODAL) ─────────────────────────────────────────────────
+function obrirEdicio(idx) {
+  var r = receptes[idx];
+  document.getElementById('editIdx').value = idx;
+  document.getElementById('editTitle').value = r.title || '';
+  document.getElementById('editUrl').value = r.url || '';
+  document.getElementById('editCat').value = r.cat || 'General';
+  document.getElementById('editNotes').value = r.notes || '';
+  document.getElementById('editModal').classList.add('active');
+}
+
+function tancarModal() {
+  document.getElementById('editModal').classList.remove('active');
+}
+
+function guardarEdicio() {
+  var idx = parseInt(document.getElementById('editIdx').value);
+  var title = document.getElementById('editTitle').value.trim();
+  if (!title) { toast('⚠️ Cal un títol'); return; }
+
+  receptes[idx].title = title;
+  receptes[idx].url = document.getElementById('editUrl').value.trim();
+  receptes[idx].cat = document.getElementById('editCat').value;
+  receptes[idx].notes = document.getElementById('editNotes').value.trim();
+
+  save();
+  tancarModal();
+  renderReceptes();
+  toast('✅ Recepta actualitzada!');
+}
+
+// Tancar modal clicant fora
+document.getElementById('editModal').addEventListener('click', function(e) {
+  if (e.target === this) tancarModal();
+});
+
+// ─── AFEGIR ──────────────────────────────────────────────────────────────────
+function afegirRecepta() {
+  var title = document.getElementById('newTitle').value.trim();
+  if (!title) { toast('⚠️ Cal un títol'); return; }
+  var url = document.getElementById('newUrl').value.trim();
+  var catSelect = document.getElementById('newCat').value;
+  var notes = document.getElementById('newNotes').value.trim();
+  var today = new Date().toLocaleDateString('ca');
+
+  var cat = (catSelect === 'auto') ? detectarCategoria(title + ' ' + url + ' ' + notes) : catSelect;
+
+  receptes.unshift({ title: title, url: url, cat: cat, notes: notes, date: today });
+  save();
+  document.getElementById('newTitle').value = '';
+  document.getElementById('newUrl').value = '';
+  document.getElementById('newNotes').value = '';
+  document.getElementById('newCat').value = 'auto';
+  toast('✅ Recepta desada! (' + cat + ')');
+  showTabById('receptes');
+}
+
+// ─── IMPORTAR WHATSAPP ────────────────────────────────────────────────────────
+var dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('drag'); });
+dropZone.addEventListener('dragleave', function() { dropZone.classList.remove('drag'); });
+dropZone.addEventListener('drop', function(e) { e.preventDefault(); dropZone.classList.remove('drag'); handleFile(e.dataTransfer.files[0]); });
+
+async function handleFile(file) {
+  if (!file) return;
+  var text = '';
+
+  if (file.name.endsWith('.zip')) {
+    var script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    document.head.appendChild(script);
+    await new Promise(function(r) { script.onload = r; });
+    var buf = await file.arrayBuffer();
+    var zip = await JSZip.loadAsync(buf);
+    var txtFile = Object.values(zip.files).find(function(f) { return f.name.endsWith('.txt'); });
+    if (!txtFile) { toast('⚠️ No trobo fitxer .txt al zip'); return; }
+    text = await txtFile.async('text');
+  } else {
+    text = await file.text();
+  }
+
+  parseWhatsApp(text);
+}
+
+function parseWhatsApp(text) {
+  var lines = text.split('\n');
+  var urlRegex = /https?:\/\/[^\s]+/g;
+
+  var missatges = [];
+  var currentMsg = null;
+
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var msgMatch = line.match(/^\d{1,2}\/\d{1,2}\/\d{2,4},?\s[\d:]+\s?[-–]\s(.+?):\s(.*)/);
+    if (msgMatch) {
+      if (currentMsg) missatges.push(currentMsg);
+      currentMsg = { autor: msgMatch[1], text: msgMatch[2] };
+    } else if (currentMsg) {
+      currentMsg.text += '\n' + line;
+    }
+  }
+  if (currentMsg) missatges.push(currentMsg);
+
+  var trobats = [];
+  for (var j = 0; j < missatges.length; j++) {
+    var m = missatges[j];
+    var urls = m.text.match(urlRegex);
+    if (!urls) continue;
+    var titol = m.text
+      .replace(urlRegex, '')
+      .replace(/[👍🩷❤️💚🔗·.•]+/g, '')
+      .replace(/\(fitxer adjunt\)/gi, '')
+      .replace(/\u200e/g, '')
+      .replace(/\n+/g, ' ')
+      .trim();
+
+    if (titol.length > 100) titol = titol.substring(0, 100) + '...';
+    if (!titol || titol.length < 3) {
+      try { titol = urls[0].replace(/https?:\/\/(www\.)?/, '').split('/')[0]; } catch(e) { titol = 'Recepta'; }
+    }
+
+    for (var k = 0; k < urls.length; k++) {
+      trobats.push({ titol: titol || urls[k], url: urls[k], selected: true });
+    }
+  }
+
+  if (trobats.length === 0) {
+    document.getElementById('importResults').innerHTML =
+      '<div class="result-box"><h4>⚠️ No s\'han trobat links al fitxer</h4>' +
+      '<p style="font-size:12px;color:var(--text2)">Assegura\'t que és un export de WhatsApp amb format .txt</p></div>';
+    return;
+  }
+
+  renderImportResults(trobats);
+}
+
+function renderImportResults(trobats) {
+  window._importTrobats = trobats;
+  var html = '<div class="result-box"><h4>🔗 ' + trobats.length + ' recepta' + (trobats.length > 1 ? 'es' : '') + ' trobada' + (trobats.length > 1 ? 'es' : '') + '</h4>';
+  trobats.forEach(function(t, i) {
+    html += '<div class="result-item" id="ri-' + i + '">' +
+      '<span class="check-icon" onclick="toggleSel(' + i + ')" id="chk-' + i + '">✅</span>' +
+      '<div style="flex:1;min-width:0">' +
+      '<input class="title-edit" id="title-' + i + '" value="' + escHtml(t.titol) + '" placeholder="Títol">' +
+      '<div class="url">' + t.url + '</div></div></div>';
+  });
+  html += '</div><div style="display:flex;gap:8px;margin-bottom:20px">' +
+    '<button class="btn btn-primary btn-full" onclick="importarSeleccionades()">✅ Importar seleccionades</button></div>';
+  document.getElementById('importResults').innerHTML = html;
+}
+
+function toggleSel(i) {
+  window._importTrobats[i].selected = !window._importTrobats[i].selected;
+  document.getElementById('chk-' + i).textContent = window._importTrobats[i].selected ? '✅' : '⬜';
+}
+
+function importarSeleccionades() {
+  var today = new Date().toLocaleDateString('ca');
+  var count = 0;
+  for (var i = 0; i < window._importTrobats.length; i++) {
+    var t = window._importTrobats[i];
+    if (!t.selected) continue;
+    var title = document.getElementById('title-' + i).value.trim() || t.titol;
+    var cat = detectarCategoria(title + ' ' + t.url);
+
+    if (!receptes.find(function(r) { return r.url === t.url; })) {
+      receptes.unshift({ title: title, url: t.url, cat: cat, notes: '', date: today });
+      count++;
+    }
+  }
+  save();
+  document.getElementById('importResults').innerHTML =
+    '<div class="result-box" style="text-align:center;padding:20px">' +
+    '<div style="font-size:40px;margin-bottom:10px">🎉</div>' +
+    '<h4 style="font-size:16px;color:var(--accent2)">' + count + ' recepta' + (count !== 1 ? 'es' : '') + ' importada' + (count !== 1 ? 'des' : '') + '!</h4>' +
+    '<p style="font-size:12px;color:var(--text2);margin-top:6px">Categories assignades automàticament 🤖</p>' +
+    '<button class="btn btn-primary" style="margin-top:14px" onclick="showTabById(\'receptes\')">Veure receptes →</button></div>';
+  toast('✅ ' + count + ' receptes importades!');
+}
+
+// ─── EXPORTAR / IMPORTAR JSON (BACKUP) ───────────────────────────────────────
+function exportarJSON() {
+  if (!receptes.length) { toast('No hi ha receptes per exportar!'); return; }
+  var blob = new Blob([JSON.stringify(receptes, null, 2)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'receptari_backup_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('📤 Backup exportat!');
+}
+
+function importarJSON(file) {
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      var imported = JSON.parse(ev.target.result);
+      if (!Array.isArray(imported)) throw new Error();
+      var added = 0;
+      imported.forEach(function(r) {
+        if (!receptes.find(function(e) { return e.url && e.url === r.url && e.title === r.title; })) {
+          receptes.push(r);
+          added++;
+        }
+      });
+      save();
+      renderReceptes();
+      toast('📥 ' + added + ' receptes importades!');
+    } catch(e) {
+      toast('⚠️ Error: fitxer no vàlid');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ─── SHARE TARGET (PWA) - GUARDAT AUTOMÀTIC ─────────────────────────────────
+window.addEventListener('DOMContentLoaded', function() {
+  var params = new URLSearchParams(window.location.search);
+  var sharedTitle = params.get('title') || '';
+  var sharedText = params.get('text') || '';
+  var sharedUrl = params.get('url') || '';
+
+  if (sharedTitle || sharedText || sharedUrl) {
+    // Extreure URL del text si no ve separada
+    var url = sharedUrl || '';
+    if (!url) {
+      var match = (sharedText || '').match(/https?:\/\/[^\s]+/);
+      if (match) url = match[0];
+    }
+
+    // Extreure títol millorat
+    var title = sharedTitle || '';
+    if (!title || title === 'undefined') {
+      // Intentar extreure del text (primera línia sense URL)
+      var textSenseUrl = (sharedText || '').replace(/https?:\/\/[^\s]+/g, '').trim();
+      var linies = textSenseUrl.split('\n').filter(function(l) { return l.trim().length > 2; });
+      title = linies.length > 0 ? linies[0].trim() : '';
+    }
+    if (!title || title.length < 3) {
+      // Usar el domini com a títol
+      try { title = url.replace(/https?:\/\/(www\.)?/, '').split('/')[0] + ' - Recepta'; } catch(e) { title = 'Recepta compartida'; }
+    }
+    if (title.length > 100) title = title.substring(0, 100) + '...';
+
+    // Classificar automàticament
+    var cat = detectarCategoria(title + ' ' + url + ' ' + sharedText);
+    var today = new Date().toLocaleDateString('ca');
+
+    // Guardar automàticament
+    receptes.unshift({
+      title: title,
+      url: url,
+      cat: cat,
+      notes: sharedText || '',
+      date: today
+    });
+    save();
+    toast('✅ Recepta guardada! (' + cat + ') — Prem ✏️ per editar');
+
+    // Netejar URL
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+
+  renderReceptes();
+});
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+
+// ─── SERVICE WORKER ──────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(function(err) { console.log('SW error:', err); });
+}
+</script>
+
+</body>
+</html>
+
