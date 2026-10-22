@@ -1,0 +1,669 @@
+
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#e74c3c">
+    <title>Les Meves Receptes</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fafafa;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+        header {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 16px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+        }
+        header h1 { font-size: 1.4em; font-weight: 700; }
+        header p { font-size: 0.85em; opacity: 0.9; margin-top: 2px; }
+
+        /* SEARCH BAR */
+        .search-bar {
+            padding: 12px 20px;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+        .search-bar input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #eee;
+            border-radius: 25px;
+            font-size: 0.95em;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .search-bar input:focus { border-color: #e74c3c; }
+
+        /* CATEGORIES */
+        .categories {
+            display: flex;
+            gap: 8px;
+            padding: 12px 20px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .categories::-webkit-scrollbar { display: none; }
+        .cat-btn {
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 2px solid #e74c3c;
+            background: white;
+            color: #e74c3c;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+        .cat-btn.active, .cat-btn:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        /* RECIPE LIST */
+        .recipe-list {
+            padding: 10px 20px 100px;
+        }
+        .recipe-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+        .recipe-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+        }
+        .recipe-card h3 { font-size: 1.05em; margin-bottom: 6px; color: #2c3e50; }
+        .recipe-card .meta {
+            display: flex;
+            gap: 12px;
+            font-size: 0.8em;
+            color: #888;
+            margin-bottom: 8px;
+        }
+        .recipe-card .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+        .tag {
+            background: #ffeaea;
+            color: #e74c3c;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+        .recipe-card .source-link {
+            font-size: 0.78em;
+            color: #3498db;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 6px;
+        }
+        .delete-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            opacity: 0.4;
+            transition: opacity 0.3s;
+        }
+        .delete-btn:hover { opacity: 1; }
+
+        /* FAB */
+        .fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            font-size: 1.8em;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(231,76,60,0.4);
+            z-index: 90;
+            transition: transform 0.3s;
+        }
+        .fab:hover { transform: scale(1.1); }
+
+        /* EXPORT/IMPORT BUTTONS */
+        .toolbar {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            display: flex;
+            gap: 8px;
+            z-index: 90;
+        }
+        .tool-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #ddd;
+            font-size: 1.2em;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        .tool-btn:hover { border-color: #e74c3c; }
+
+        /* MODAL */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 500px;
+            margin-top: 40px;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal h2 { font-size: 1.3em; margin-bottom: 16px; color: #2c3e50; }
+        .modal label {
+            display: block;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 4px;
+            margin-top: 12px;
+        }
+        .modal input, .modal textarea, .modal select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 0.95em;
+            outline: none;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        .modal input:focus, .modal textarea:focus, .modal select:focus {
+            border-color: #e74c3c;
+        }
+        .modal textarea { resize: vertical; min-height: 100px; }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn-primary { background: #e74c3c; color: white; }
+        .btn-secondary { background: #eee; color: #555; }
+
+        /* DETAIL VIEW */
+        .detail-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: white;
+            z-index: 150;
+            overflow-y: auto;
+        }
+        .detail-overlay.active { display: block; }
+        .detail-header {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .detail-header button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        .detail-content { padding: 20px; }
+        .detail-content h2 { font-size: 1.3em; margin-bottom: 12px; color: #2c3e50; }
+        .detail-content .section-title {
+            font-size: 0.9em;
+            font-weight: 700;
+            color: #e74c3c;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 20px;
+            margin-bottom: 8px;
+        }
+        .detail-content p, .detail-content pre {
+            font-size: 0.95em;
+            line-height: 1.6;
+            color: #555;
+            white-space: pre-wrap;
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #aaa;
+        }
+        .empty-state .icon { font-size: 3em; margin-bottom: 12px; }
+        .empty-state p { font-size: 0.95em; }
+
+        /* COUNTER */
+        .counter {
+            text-align: center;
+            padding: 8px;
+            font-size: 0.8em;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🍳 Les Meves Receptes</h1>
+    <p>La teva col·lecció personal</p>
+</header>
+
+<div class="search-bar">
+    <input type="text" id="searchInput" placeholder="🔍 Cercar receptes...">
+</div>
+
+<div class="categories" id="categories">
+    <button class="cat-btn active" data-cat="all">Totes</button>
+    <button class="cat-btn" data-cat="primers">🥘 Primers</button>
+    <button class="cat-btn" data-cat="segons">🍖 Segons</button>
+    <button class="cat-btn" data-cat="postres">🍰 Postres</button>
+    <button class="cat-btn" data-cat="snacks">🥪 Snacks</button>
+    <button class="cat-btn" data-cat="begudes">🥤 Begudes</button>
+    <button class="cat-btn" data-cat="altres">📌 Altres</button>
+</div>
+
+<div class="counter" id="counter"></div>
+
+<div class="recipe-list" id="recipeList"></div>
+
+<button class="fab" id="addBtn" title="Afegir recepta">+</button>
+
+<div class="toolbar">
+    <button class="tool-btn" id="exportBtn" title="Exportar receptes">📤</button>
+    <button class="tool-btn" id="importBtn" title="Importar receptes">📥</button>
+</div>
+
+<!-- MODAL AFEGIR/EDITAR -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <h2 id="modalTitle">Nova Recepta</h2>
+        <input type="hidden" id="editId">
+
+        <label>Nom de la recepta *</label>
+        <input type="text" id="recipeName" placeholder="Ex: Paella valenciana">
+
+        <label>Categoria</label>
+        <select id="recipeCategory">
+            <option value="primers">🥘 Primers</option>
+            <option value="segons">🍖 Segons</option>
+            <option value="postres">🍰 Postres</option>
+            <option value="snacks">🥪 Snacks</option>
+            <option value="begudes">🥤 Begudes</option>
+            <option value="altres">📌 Altres</option>
+        </select>
+
+        <label>Ingredients</label>
+        <textarea id="recipeIngredients" placeholder="Un ingredient per línia..."></textarea>
+
+        <label>Preparació</label>
+        <textarea id="recipeSteps" placeholder="Passos de la recepta..." style="min-height:140px"></textarea>
+
+        <label>Font / URL (Instagram, web, etc.)</label>
+        <input type="url" id="recipeSource" placeholder="https://...">
+
+        <label>Etiquetes (separades per comes)</label>
+        <input type="text" id="recipeTags" placeholder="Ex: fàcil, ràpid, vegà">
+
+        <label>Notes personals</label>
+        <textarea id="recipeNotes" placeholder="Trucs, variacions..." style="min-height:60px"></textarea>
+
+        <div class="modal-actions">
+            <button class="btn btn-secondary" id="cancelBtn">Cancel·lar</button>
+            <button class="btn btn-primary" id="saveBtn">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- DETAIL VIEW -->
+<div class="detail-overlay" id="detailOverlay">
+    <div class="detail-header">
+        <button id="backBtn">←</button>
+        <h1 id="detailTitle">Recepta</h1>
+    </div>
+    <div class="detail-content" id="detailContent"></div>
+</div>
+
+<input type="file" id="importFile" accept=".json" style="display:none">
+
+<script>
+    // ===== DATA MANAGEMENT =====
+    const STORAGE_KEY = 'les_meves_receptes';
+
+    function getRecipes() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        } catch { return []; }
+    }
+
+    function saveRecipes(recipes) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes));
+    }
+
+    // ===== RENDER =====
+    let currentCategory = 'all';
+    let searchQuery = '';
+
+    function renderRecipes() {
+        const recipes = getRecipes();
+        const list = document.getElementById('recipeList');
+        const counter = document.getElementById('counter');
+
+        let filtered = recipes;
+        if (currentCategory !== 'all') {
+            filtered = filtered.filter(r => r.category === currentCategory);
+        }
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            filtered = filtered.filter(r =>
+                r.name.toLowerCase().includes(q) ||
+                (r.ingredients || '').toLowerCase().includes(q) ||
+                (r.tags || []).some(t => t.toLowerCase().includes(q))
+            );
+        }
+
+        filtered.sort((a, b) => new Date(b.created) - new Date(a.created));
+
+        counter.textContent = filtered.length + ' recepta' + (filtered.length !== 1 ? 'es' : '');
+
+        if (filtered.length === 0) {
+            list.innerHTML = '<div class="empty-state"><div class="icon">📖</div><p>Cap recepta trobada.<br>Prem + per afegir-ne una!</p></div>';
+            return;
+        }
+
+        list.innerHTML = filtered.map(r => {
+            const date = new Date(r.created).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+            const catLabels = { primers:'🥘 Primers', segons:'🍖 Segons', postres:'🍰 Postres', snacks:'🥪 Snacks', begudes:'🥤 Begudes', altres:'📌 Altres' };
+            const tags = (r.tags || []).map(t => '<span class="tag">' + t + '</span>').join('');
+            const source = r.source ? '<a href="' + r.source + '" class="source-link" target="_blank" onclick="event.stopPropagation()">🔗 Veure font original</a>' : '';
+
+            return '<div class="recipe-card" onclick="showDetail(\'' + r.id + '\')">' +
+                '<button class="delete-btn" onclick="event.stopPropagation();deleteRecipe(\'' + r.id + '\')">🗑️</button>' +
+                '<h3>' + escapeHtml(r.name) + '</h3>' +
+                '<div class="meta"><span>' + date + '</span><span>' + (catLabels[r.category] || '') + '</span></div>' +
+                '<div class="tags">' + tags + '</div>' +
+                source +
+                '</div>';
+        }).join('');
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ===== CATEGORIES =====
+    document.getElementById('categories').addEventListener('click', e => {
+        if (e.target.classList.contains('cat-btn')) {
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            currentCategory = e.target.dataset.cat;
+            renderRecipes();
+        }
+    });
+
+    // ===== SEARCH =====
+    document.getElementById('searchInput').addEventListener('input', e => {
+        searchQuery = e.target.value;
+        renderRecipes();
+    });
+
+    // ===== ADD / EDIT =====
+    document.getElementById('addBtn').addEventListener('click', () => openModal());
+    document.getElementById('cancelBtn').addEventListener('click', () => closeModal());
+    document.getElementById('modalOverlay').addEventListener('click', e => {
+        if (e.target === e.currentTarget) closeModal();
+    });
+
+    function openModal(recipe = null) {
+        document.getElementById('modalTitle').textContent = recipe ? 'Editar Recepta' : 'Nova Recepta';
+        document.getElementById('editId').value = recipe ? recipe.id : '';
+        document.getElementById('recipeName').value = recipe ? recipe.name : '';
+        document.getElementById('recipeCategory').value = recipe ? recipe.category : 'primers';
+        document.getElementById('recipeIngredients').value = recipe ? recipe.ingredients : '';
+        document.getElementById('recipeSteps').value = recipe ? recipe.steps : '';
+        document.getElementById('recipeSource').value = recipe ? recipe.source : '';
+        document.getElementById('recipeTags').value = recipe ? (recipe.tags || []).join(', ') : '';
+        document.getElementById('recipeNotes').value = recipe ? recipe.notes : '';
+        document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', () => {
+        const name = document.getElementById('recipeName').value.trim();
+        if (!name) { alert('El nom és obligatori!'); return; }
+
+        const editId = document.getElementById('editId').value;
+        const recipes = getRecipes();
+
+        const recipeData = {
+            name: name,
+            category: document.getElementById('recipeCategory').value,
+            ingredients: document.getElementById('recipeIngredients').value.trim(),
+            steps: document.getElementById('recipeSteps').value.trim(),
+            source: document.getElementById('recipeSource').value.trim(),
+            tags: document.getElementById('recipeTags').value.split(',').map(t => t.trim()).filter(t => t),
+            notes: document.getElementById('recipeNotes').value.trim()
+        };
+
+        if (editId) {
+            const idx = recipes.findIndex(r => r.id === editId);
+            if (idx !== -1) {
+                recipes[idx] = { ...recipes[idx], ...recipeData, modified: new Date().toISOString() };
+            }
+        } else {
+            recipeData.id = 'r_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            recipeData.created = new Date().toISOString();
+            recipes.push(recipeData);
+        }
+
+        saveRecipes(recipes);
+        closeModal();
+        renderRecipes();
+    });
+
+    // ===== DELETE =====
+    function deleteRecipe(id) {
+        if (!confirm('Segur que vols eliminar aquesta recepta?')) return;
+        const recipes = getRecipes().filter(r => r.id !== id);
+        saveRecipes(recipes);
+        renderRecipes();
+    }
+
+    // ===== DETAIL VIEW =====
+    function showDetail(id) {
+        const recipe = getRecipes().find(r => r.id === id);
+        if (!recipe) return;
+
+        document.getElementById('detailTitle').textContent = recipe.name;
+        const catLabels = { primers:'🥘 Primers', segons:'🍖 Segons', postres:'🍰 Postres', snacks:'🥪 Snacks', begudes:'🥤 Begudes', altres:'📌 Altres' };
+
+        let html = '<h2>' + escapeHtml(recipe.name) + '</h2>';
+        html += '<div class="meta" style="display:flex;gap:12px;font-size:0.85em;color:#888;margin-bottom:16px">';
+        html += '<span>' + (catLabels[recipe.category] || '') + '</span>';
+        html += '<span>' + new Date(recipe.created).toLocaleDateString('ca-ES') + '</span>';
+        html += '</div>';
+
+        if (recipe.ingredients) {
+            html += '<div class="section-title">🥕 Ingredients</div>';
+            html += '<pre>' + escapeHtml(recipe.ingredients) + '</pre>';
+        }
+        if (recipe.steps) {
+            html += '<div class="section-title">👨‍🍳 Preparació</div>';
+            html += '<pre>' + escapeHtml(recipe.steps) + '</pre>';
+        }
+        if (recipe.source) {
+            html += '<div class="section-title">🔗 Font</div>';
+            html += '<p><a href="' + escapeHtml(recipe.source) + '" target="_blank" style="color:#3498db">' + escapeHtml(recipe.source) + '</a></p>';
+        }
+        if (recipe.notes) {
+            html += '<div class="section-title">📝 Notes</div>';
+            html += '<pre>' + escapeHtml(recipe.notes) + '</pre>';
+        }
+        if (recipe.tags && recipe.tags.length) {
+            html += '<div class="section-title">🏷️ Etiquetes</div>';
+            html += '<div class="tags">' + recipe.tags.map(t => '<span class="tag">' + escapeHtml(t) + '</span>').join(' ') + '</div>';
+        }
+
+        html += '<div style="margin-top:24px"><button class="btn btn-primary" style="width:auto;padding:10px 24px" onclick="editFromDetail(\'' + recipe.id + '\')">✏️ Editar</button></div>';
+
+        document.getElementById('detailContent').innerHTML = html;
+        document.getElementById('detailOverlay').classList.add('active');
+    }
+
+    function editFromDetail(id) {
+        document.getElementById('detailOverlay').classList.remove('active');
+        const recipe = getRecipes().find(r => r.id === id);
+        if (recipe) openModal(recipe);
+    }
+
+    document.getElementById('backBtn').addEventListener('click', () => {
+        document.getElementById('detailOverlay').classList.remove('active');
+    });
+
+    // ===== EXPORT =====
+    document.getElementById('exportBtn').addEventListener('click', () => {
+        const recipes = getRecipes();
+        if (!recipes.length) { alert('No hi ha receptes per exportar!'); return; }
+        const blob = new Blob([JSON.stringify(recipes, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'les_meves_receptes_' + new Date().toISOString().slice(0,10) + '.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    // ===== IMPORT =====
+    document.getElementById('importBtn').addEventListener('click', () => {
+        document.getElementById('importFile').click();
+    });
+
+    document.getElementById('importFile').addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            try {
+                const imported = JSON.parse(ev.target.result);
+                if (!Array.isArray(imported)) throw new Error();
+                const existing = getRecipes();
+                const existingIds = new Set(existing.map(r => r.id));
+                let added = 0;
+                imported.forEach(r => {
+                    if (!existingIds.has(r.id)) {
+                        existing.push(r);
+                        added++;
+                    }
+                });
+                saveRecipes(existing);
+                renderRecipes();
+                alert('Importades ' + added + ' receptes noves!');
+            } catch {
+                alert('Error: El fitxer no és vàlid.');
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    });
+
+    // ===== HANDLE SHARED CONTENT (PWA Share Target) =====
+    window.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const sharedTitle = params.get('title') || '';
+        const sharedText = params.get('text') || '';
+        const sharedUrl = params.get('url') || '';
+
+        if (sharedTitle || sharedText || sharedUrl) {
+            setTimeout(() => {
+                openModal();
+                document.getElementById('recipeName').value = sharedTitle || extractTitle(sharedText) || 'Recepta compartida';
+                document.getElementById('recipeSource').value = sharedUrl || extractUrl(sharedText) || '';
+                document.getElementById('recipeNotes').value = sharedText || '';
+            }, 300);
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+
+        renderRecipes();
+    });
+
+    function extractUrl(text) {
+        const match = (text || '').match(/https?:\/\/[^\s]+/);
+        return match ? match[0] : '';
+    }
+
+    function extractTitle(text) {
+        if (!text) return '';
+        const lines = text.split('\n').filter(l => l.trim());
+        return lines[0] ? lines[0].substring(0, 80) : '';
+    }
+
+    // ===== SERVICE WORKER REGISTRATION =====
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
+    }
+</script>
+
+</body>
+</html>
+
